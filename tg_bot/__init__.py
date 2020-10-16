@@ -2,7 +2,6 @@ import logging
 import os
 import sys
 import time
-import spamwatch
 import telegram.ext as tg
 from telethon import TelegramClient
 from pyrogram import Client, errors
@@ -86,7 +85,6 @@ if ENV:
     TIME_API_KEY = os.environ.get("TIME_API_KEY", None)
     WALL_API = os.environ.get("WALL_API", None)
     LASTFM_API_KEY = os.environ.get("LASTFM_API_KEY", None)
-    spamwatch_api = os.environ.get("sw_api", None)
     INFOPIC = bool(os.environ.get('INFOPIC', False))
 
 else:
@@ -148,49 +146,6 @@ else:
     TIME_API_KEY = Config.TIME_API_KEY
     WALL_API = Config.WALL_API
     LASTFM_API_KEY = Config.LASTFM_API_KEY
-    spamwatch_api = Config.spamwatch_api
     INFOPIC = Config.INFOPIC
 SUDO_USERS.add(OWNER_ID)
 DEV_USERS.add(OWNER_ID)
-
-# SpamWatch
-if spamwatch_api == "None":
-    sw = None
-    LOGGER.warning("SpamWatch API key is missing! Check your config.env.")
-else:
-    sw = spamwatch.Client(spamwatch_api)
-
-
-updater = tg.Updater(TOKEN, workers=WORKERS)
-telethn = TelegramClient("kigyo", API_ID, API_HASH)
-dispatcher = updater.dispatcher
-
-kp = Client("KigyoPyro", api_id=API_ID, api_hash=API_HASH, bot_token=TOKEN)
-
-SUDO_USERS = list(SUDO_USERS) + list(DEV_USERS)
-DEV_USERS = list(DEV_USERS)
-WHITELIST_USERS = list(WHITELIST_USERS)
-SUPPORT_USERS = list(SUPPORT_USERS)
-SARDEGNA_USERS = list(SARDEGNA_USERS)
-SPAMMERS = list(SPAMMERS)
-
-# Load at end to ensure all prev variables have been set
-from tg_bot.modules.helper_funcs.handlers import (
-    CustomCommandHandler,
-    CustomRegexHandler,
-    CustomMessageHandler,
-)
-
-# make sure the regex handler can take extra kwargs
-tg.RegexHandler = CustomRegexHandler
-tg.CommandHandler = CustomCommandHandler
-tg.MessageHandler = CustomMessageHandler
-
-
-def spamfilters(text, user_id, chat_id):
-    # print("{} | {} | {}".format(text, user_id, chat_id))
-    if int(user_id) in SPAMMERS:
-        print("This user is a spammer!")
-        return True
-    else:
-        return False
